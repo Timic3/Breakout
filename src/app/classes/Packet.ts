@@ -1,3 +1,4 @@
+import { AppConstants } from '../app.constants';
 import { Drawable } from './Drawable';
 
 export class Packet extends Drawable {
@@ -7,8 +8,8 @@ export class Packet extends Drawable {
 
   draw() {
     this.context.beginPath();
-    this.context.fillStyle = 'white';
-    this.context.arc(this.x, this.y, 10, 0, Math.PI * 2);
+    this.context.fillStyle = '#20C20E';
+    this.context.arc(this.x, this.y, AppConstants.PACKET_RADIUS, 0, Math.PI * 2);
     this.context.fill();
     this.context.closePath();
   }
