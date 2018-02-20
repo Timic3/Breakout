@@ -8,7 +8,7 @@ export class Packet extends Drawable {
 
   draw() {
     this.context.beginPath();
-    this.context.fillStyle = '#20C20E';
+    this.context.fillStyle = 'rgb(255, 255, 255)';
     this.context.arc(this.x, this.y, AppConstants.PACKET_RADIUS, 0, Math.PI * 2);
     this.context.fill();
     this.context.closePath();

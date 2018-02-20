@@ -3,6 +3,7 @@ import { Component, AfterContentInit } from '@angular/core';
 import { AppConstants } from './app.constants';
 import { Packet } from './classes/Packet';
 import { Firewall } from './classes/Firewall';
+import { Utils } from './classes/Utils';
 
 @Component({
   selector: 'app-root',
@@ -16,8 +17,11 @@ export class AppComponent implements AfterContentInit {
   private packet: Packet;
   private firewall: Firewall;
 
-  private wayX = Math.random() * 15;
-  private wayY = Math.random() * 15;
+  private wayX = Math.random() * 25;
+  private wayY = Math.random() * 25;
+
+  private hitRight;
+  private interpolation = 0;
 
   ngAfterContentInit() {
     this.game = <HTMLCanvasElement>document.getElementById('breakout');
@@ -60,6 +64,7 @@ export class AppComponent implements AfterContentInit {
     // if (10 * 10 >= Math.pow((boundsXDistance - 250) + (100000), 2)) {
     if (this.packet.x > AppConstants.GAME_WIDTH - AppConstants.PACKET_RADIUS) {
       this.wayX = -this.wayX;
+      this.hitRight = true;
     }
 
     if (this.packet.y > AppConstants.GAME_HEIGHT - AppConstants.PACKET_RADIUS) {
@@ -72,6 +77,27 @@ export class AppComponent implements AfterContentInit {
 
     if (this.packet.y < AppConstants.PACKET_RADIUS) {
       this.wayY = -this.wayY;
+    }
+
+    if (this.hitRight) {
+      this.context.beginPath();
+      /*this.context.moveTo(AppConstants.GAME_WIDTH - 5, (AppConstants.GAME_HEIGHT / 2) * (1 - this.interpolation));
+      this.context.lineWidth = 5;
+      this.context.strokeStyle = 'rgb(255, 255, 255, ' + this.interpolation + ')';
+      // (AppConstants.GAME_HEIGHT / 2) + (AppConstants.GAME_HEIGHT / 2) * (this.interpolation)
+      this.context.lineTo(AppConstants.GAME_WIDTH - 5,  (AppConstants.GAME_HEIGHT / 2) * (1 + this.interpolation));
+      this.context.stroke();*/
+      const animation = Utils.easeInOutCubic(1 - this.interpolation);
+      this.context.fillStyle = 'rgba(255, 255, 255, ' + (1 - this.interpolation + 0.25) + ')';
+      //this.context.arc(0, 0, 120, 0, Math.PI * 2);
+      this.context.ellipse(AppConstants.GAME_WIDTH + 45 * animation, AppConstants.GAME_HEIGHT / 2, 50, AppConstants.GAME_HEIGHT / 2, 0, 0, Math.PI * 2);
+      this.context.fill();
+      this.context.closePath();
+      this.interpolation += 0.07;
+      if (this.interpolation >= 1) {
+        this.hitRight = false;
+        this.interpolation = 0;
+      }
     }
 
     this.packet.draw();
