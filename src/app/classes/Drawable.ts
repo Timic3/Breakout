@@ -1,4 +1,4 @@
-export class Drawable {
+export abstract class Drawable {
   public x: number;
   public y: number;
   public context: CanvasRenderingContext2D;
