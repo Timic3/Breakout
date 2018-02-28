@@ -8,4 +8,6 @@ export abstract class Drawable {
     this.y = y;
     this.context = context;
   }
+
+  abstract draw(bouncer?): void; // Must be implemented in derived classes
 }

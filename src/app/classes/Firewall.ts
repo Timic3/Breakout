@@ -26,14 +26,12 @@ export class Firewall extends Drawable {
   draw() {
     this.context.beginPath();
     this.context.fillStyle = 'white';
-    /*for (let x = 0; x < 9; x++) {
-      for (let y = 0; y < 3; y++) {
-        this.context.rect(5 + 55 * x, 5 + 25 * y, 50, 20);
-      }
-    }*/
     for (let x = 0; x < AppConstants.WALLS_X; x++) {
       for (let y = 0; y < AppConstants.WALLS_Y; y++) {
-        this.context.rect(Firewall.list[x][y].x, Firewall.list[x][y].y, Firewall.list[x][y].width, Firewall.list[x][y].height);
+        const wall = Firewall.list[x][y];
+        if (wall.active) {
+          this.context.rect(wall.x, wall.y, wall.width, wall.height);
+        }
       }
     }
     this.context.fill();

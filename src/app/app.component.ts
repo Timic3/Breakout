@@ -1,9 +1,9 @@
-import { Component, AfterContentInit } from '@angular/core';
+import { Component, AfterContentInit, HostListener } from '@angular/core';
 
 import { AppConstants } from './app.constants';
 import { Packet } from './classes/Packet';
 import { Firewall } from './classes/Firewall';
-import { Utils, Vector2D } from './classes/Utils';
+import { Bouncer } from './classes/Bouncer';
 
 @Component({
   selector: 'app-root',
@@ -11,22 +11,17 @@ import { Utils, Vector2D } from './classes/Utils';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements AfterContentInit {
-  public static wayX = 1;
-  public static wayY = 1;
-  public movement = new Vector2D();
-
   public game: HTMLCanvasElement;
   public context: CanvasRenderingContext2D;
 
   private packet: Packet;
   private firewall: Firewall;
+  private bouncer: Bouncer;
+
+  private movement = [];
 
   private shakeTime = 150;
   private shakeTickStart = -1;
-  private hitRight;
-  private hitLeft;
-  private erpRight = 0;
-  private erpLeft = 1;
 
   ngAfterContentInit() {
     this.game = <HTMLCanvasElement>document.getElementById('breakout');
@@ -35,7 +30,10 @@ export class AppComponent implements AfterContentInit {
     this.context = this.game.getContext('2d');
 
     this.firewall = new Firewall(this.context);
-    this.packet = new Packet(250, 250, this.context);
+    this.bouncer = new Bouncer(this.context);
+    const packetX = this.bouncer.x + AppConstants.BOUNCER_WIDTH / 2,
+          packetY = this.bouncer.y - AppConstants.PACKET_RADIUS - 5;
+    this.packet = new Packet(packetX, packetY, this.context);
     this.gameLoop();
   }
 
@@ -50,91 +48,33 @@ export class AppComponent implements AfterContentInit {
     this.context.fillStyle = 'black';
     this.context.fillRect(0, 0, AppConstants.GAME_WIDTH, AppConstants.GAME_HEIGHT);
 
-    // Trigonometry - calculate direction in radians and multiply with speed
-    // This allows us to keep constant ball speed
-    const angle = Math.atan2(AppComponent.wayY, AppComponent.wayX);
-    this.packet.x += Math.cos(angle) * AppConstants.START_SPEED;
-    this.packet.y += Math.sin(angle) * AppConstants.START_SPEED;
-
     this.cameraShake();
 
-    //#region Bounds check
-    if (this.packet.x > AppConstants.GAME_WIDTH - AppConstants.PACKET_RADIUS) {
-      AppComponent.wayX = -AppComponent.wayX;
-      this.hitRight = true;
-    }
+    this.bouncer.draw();
+    this.packet.draw(this.bouncer); // Pass bouncer position
+    this.firewall.draw();
 
-    if (this.packet.y > AppConstants.GAME_HEIGHT - AppConstants.PACKET_RADIUS) {
-      AppComponent.wayY = -AppComponent.wayY;
-    }
+    // UI
+    // TODO
 
-    if (this.packet.x < AppConstants.PACKET_RADIUS) {
-      AppComponent.wayX = -AppComponent.wayX;
-      this.hitLeft = true;
-    }
-
-    if (this.packet.y < AppConstants.PACKET_RADIUS) {
-      AppComponent.wayY = -AppComponent.wayY;
-    }
-    //#endregion
-
-    if (this.hitRight) {
-      if (AppConstants.SHAKE_ON_BOUNDS_HIT && this.shakeTickStart === -1) {
-        this.shakeTickStart = Date.now();
-      }
-
-      this.context.beginPath();
-      this.context.fillStyle = 'rgba(255, 255, 255, ' + Utils.easeOutQuad(1 - this.erpRight) + ')';
-
-      const animation = Utils.easeOutQuad(1 - this.erpRight);
-      const X = AppConstants.GAME_WIDTH + 45 * animation;
-      const Y = AppConstants.GAME_HEIGHT / 2;
-      const HIT_Y = AppConstants.GAME_HEIGHT / 2;
-      this.context.ellipse(X, HIT_Y, 45, Y, 0, 0, Math.PI * 2);
-
-      this.context.fill();
-      this.context.closePath();
-      this.erpRight += 0.05;
-      if (this.erpRight >= 1) {
-        this.hitRight = false;
-        this.erpRight = 0;
-      }
-    }
-
-    if (this.hitLeft) {
-      if (AppConstants.SHAKE_ON_BOUNDS_HIT && this.shakeTickStart === -1) {
-        this.shakeTickStart = Date.now();
-      }
-
-      this.context.beginPath();
-      this.context.fillStyle = 'rgba(255, 255, 255, ' + Utils.easeOutQuad(this.erpLeft) + ')';
-
-      const animation = Utils.easeOutQuad(this.erpLeft);
-      const X = -45 * animation;
-      const Y = AppConstants.GAME_HEIGHT / 2;
-      const HIT_Y = AppConstants.GAME_HEIGHT / 2;
-      this.context.ellipse(X, HIT_Y, 45, Y, 0, 0, Math.PI * 2);
-
-      this.context.fill();
-      this.context.closePath();
-      this.erpLeft -= 0.05;
-      if (this.erpLeft <= 0) {
-        this.hitLeft = false;
-        this.erpLeft = 1;
-      }
-    }
-
-    this.packet.draw();
-    this.firewall.draw(); // Pass packet position for collision detection
-
-    /*if (this.intersects(packetX, packetY, 5 + 55 * x, 5 + 25 * y, 50, 20)) {
-      AppComponent.wayX = -AppComponent.wayX;
-      AppComponent.wayY = -AppComponent.wayY;
-    }*/
+    // Circuit board
+    /*this.context.beginPath();
+    this.context.lineWidth = 2;
+    this.context.strokeStyle = 'white';
+    this.context.moveTo(AppConstants.GAME_WIDTH / 3, AppConstants.GAME_HEIGHT);
+    this.context.lineTo(AppConstants.GAME_WIDTH / 3, 100);
+    this.context.stroke();
+    this.context.closePath();*/
 
     if (this.shakeTickStart !== -1) {
       this.restoreCamera();
     }
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  @HostListener('window:keyup', ['$event'])
+  onKeyEvent(event: KeyboardEvent) {
+    this.bouncer.onKeyChange(event, event.type === 'keydown' ? true : false);
   }
 
   cameraShake() {
@@ -163,5 +103,9 @@ export class AppComponent implements AfterContentInit {
 
   restoreCamera() {
     this.context.restore();
+  }
+
+  getHealth() {
+    return Packet.health;
   }
 }
