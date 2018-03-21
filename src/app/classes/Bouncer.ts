@@ -1,4 +1,5 @@
 import { AppConstants } from '../app.constants';
+import { AppStates } from '../app.states';
 import { Drawable } from './Drawable';
 
 export class Bouncer extends Drawable {
@@ -15,13 +16,15 @@ export class Bouncer extends Drawable {
     this.context.fill();
     this.context.closePath();
 
-    let velocityX = 0;
-    if (this.movement[37]) {
-      velocityX = -AppConstants.BOUNCER_SPEED;
-    } else if (this.movement[39]) {
-      velocityX = AppConstants.BOUNCER_SPEED;
+    if (AppStates.STARTED) {
+      let velocityX = 0;
+      if (this.movement[37]) {
+        velocityX = -AppConstants.BOUNCER_SPEED - AppConstants.PROGRESSIVENESS * (AppStates.STAGE - 1);
+      } else if (this.movement[39]) {
+        velocityX = AppConstants.BOUNCER_SPEED + AppConstants.PROGRESSIVENESS * (AppStates.STAGE - 1);
+      }
+      this.x = Math.min(Math.max(this.x + velocityX, 0), AppConstants.GAME_WIDTH - AppConstants.BOUNCER_WIDTH);
     }
-    this.x = Math.min(Math.max(this.x + velocityX, 0), AppConstants.GAME_WIDTH - AppConstants.BOUNCER_WIDTH);
   }
 
   onKeyChange(event: KeyboardEvent, down: boolean) {

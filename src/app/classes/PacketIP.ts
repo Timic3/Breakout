@@ -17,6 +17,6 @@ export class PacketIP {
   constructor(sourceX: number, sourceY: number) {
     this.sourceX = sourceX;
     this.sourceY = sourceY;
-    this.sourceIP = '192.168.1.10';
+    this.sourceIP = '192.168.' + Math.round(Math.random() * 255) + '.' + Math.round(Math.random() * 255);
   }
 }

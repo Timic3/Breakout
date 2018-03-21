@@ -1,9 +1,11 @@
 import { AppConstants } from '../app.constants';
+import { AppStates } from '../app.states';
 import { Drawable } from './Drawable';
 import { Firewall } from './Firewall';
 import { Bouncer } from './Bouncer';
 import { Easing } from './Utils';
 import { PacketIP } from './PacketIP';
+import { Wall } from './Wall';
 
 export class Packet extends Drawable {
   public static health = 3;
@@ -11,30 +13,31 @@ export class Packet extends Drawable {
   private velocityX = Math.random() * (Math.floor(Math.random() * 2) === 1 ? 1 : -1);
   private velocityY = -1;
 
-  private started = true;
-
   private hitRight = false;
   private hitLeft = false;
   private erpRight = 0;
   private erpLeft = 1;
 
   private bounces: PacketIP[] = [];
+  private bouncer; // Collider
 
-  constructor(x: number, y: number, context: CanvasRenderingContext2D) {
+  constructor(x: number, y: number, bouncer: Bouncer, context: CanvasRenderingContext2D) {
     super(x, y, context);
+    this.bouncer = bouncer;
+    this.bounces.push(new PacketIP(bouncer.x + AppConstants.BOUNCER_WIDTH / 2, bouncer.y - 5));
   }
 
-  draw(bouncer: Bouncer) {
+  draw() {
     // Trigonometry - calculate direction in radians and multiply with speed
     // This allows us to keep constant ball speed
-    const angle = Math.atan2(this.velocityY, this.velocityX);
-    if (this.started) {
-      this.x += Math.cos(angle) * AppConstants.PACKET_SPEED;
-      this.y += Math.sin(angle) * AppConstants.PACKET_SPEED;
+    if (AppStates.STARTED) {
+      const angle = Math.atan2(this.velocityY, this.velocityX);
+      this.x += Math.cos(angle) * (AppStates.PACKET_SPEED + AppConstants.PROGRESSIVENESS * (AppStates.STAGE - 1));
+      this.y += Math.sin(angle) * (AppStates.PACKET_SPEED + AppConstants.PROGRESSIVENESS * (AppStates.STAGE - 1));
     }
 
-    for (let x = 0; x < AppConstants.WALLS_X; x++) {
-      for (let y = 0; y < AppConstants.WALLS_Y; y++) {
+    for (let x = 0; x < AppStates.WALLS_X; x++) {
+      for (let y = 0; y < AppStates.WALLS_Y; y++) {
         const wall = Firewall.list[x][y];
         if (wall.active) {
           this.bounceOnIntersection(wall);
@@ -42,74 +45,77 @@ export class Packet extends Drawable {
       }
     }
 
-    this.bounceOnBoundsIntersection(bouncer);
+    this.bounceOnBoundsIntersection();
 
-    if (this.x + AppConstants.PACKET_RADIUS > bouncer.x &&
-        this.x - AppConstants.PACKET_RADIUS < bouncer.x + AppConstants.BOUNCER_WIDTH &&
-        this.y + AppConstants.PACKET_RADIUS > bouncer.y &&
-        this.y - AppConstants.PACKET_RADIUS < bouncer.y + AppConstants.BOUNCER_HEIGHT) {
+    if (this.x + AppConstants.PACKET_RADIUS > this.bouncer.x &&
+        this.x - AppConstants.PACKET_RADIUS < this.bouncer.x + AppConstants.BOUNCER_WIDTH &&
+        this.y + AppConstants.PACKET_RADIUS > this.bouncer.y &&
+        this.y - AppConstants.PACKET_RADIUS < this.bouncer.y + AppConstants.BOUNCER_HEIGHT) {
           this.velocityY = -this.velocityY;
           // Just a safety check
-          this.y = bouncer.y - AppConstants.PACKET_RADIUS;
-          this.velocityX = (this.x - bouncer.x - AppConstants.BOUNCER_WIDTH / 2) / 100;
-          if (this.bounces.length === 0) {
-            this.bounces.push(new PacketIP(bouncer.x + AppConstants.BOUNCER_WIDTH / 2, bouncer.y - 5));
-          } else {
+          this.y = this.bouncer.y - AppConstants.PACKET_RADIUS;
+          this.velocityX = (this.x - this.bouncer.x - AppConstants.BOUNCER_WIDTH / 2) / 100;
+          if (this.bounces[0]) {
             this.bounces[0].returnX = this.x;
             this.bounces[0].returnY = this.y;
             this.bounces[0].returned = true;
           }
-
+          this.bounces.push(new PacketIP(this.bouncer.x + AppConstants.BOUNCER_WIDTH / 2, this.bouncer.y - 5));
     }
 
-    for (let i = 0; i < this.bounces.length; i++) {
-      const packetIP = this.bounces[i];
-      this.context.fillStyle = 'rgba(144, 238, 144, ' + packetIP.uiAlpha + ')';
-      this.context.font = '15px Arial';
-      this.context.textAlign = 'center';
-      this.context.strokeStyle = 'rgba(255, 255, 255, ' + packetIP.uiAlpha + ')';
+    if (AppStates.STARTED) {
+      for (let i = 0; i < this.bounces.length; i++) {
+        const packetIP = this.bounces[i];
+        this.context.fillStyle = 'rgba(31, 201, 200, ' + packetIP.uiAlpha + ')';
+        this.context.shadowColor = 'black';
+        this.context.shadowOffsetX = 1;
+        this.context.shadowOffsetY = 1;
+        this.context.font = '15px Arial';
+        this.context.textAlign = 'center';
+        this.context.strokeStyle = 'rgba(255, 255, 255, ' + packetIP.uiAlpha + ')';
 
-      // Source IP
-      this.context.beginPath();
-      this.context.lineWidth = 2;
-      this.context.fillText(packetIP.sourceIP, packetIP.sourceX, packetIP.sourceY, AppConstants.BOUNCER_WIDTH);
-      this.context.arc(packetIP.sourceX, packetIP.sourceY - 30, 5, 0, Math.PI * 2);
-      this.context.moveTo(packetIP.sourceX, packetIP.sourceY - 30);
-      if (!packetIP.hasDestination) { // If packet has no destination, bind it to the packet
-        this.context.lineTo(this.x, this.y);
-      } else { // However if the packet has a destination, bind it to destination coordinates
-        this.context.lineTo(packetIP.destinationX, packetIP.destinationY + 20);
-      }
-      this.context.stroke();
-      this.context.closePath();
-
-      // Destination IP
-      if (packetIP.hasDestination) {
+        // Source IP
         this.context.beginPath();
         this.context.lineWidth = 2;
-        this.context.fillText(packetIP.destinationIP, packetIP.destinationX, packetIP.destinationY, AppConstants.BOUNCER_WIDTH);
-        this.context.arc(packetIP.destinationX, packetIP.destinationY + 20, 5, 0, Math.PI * 2);
-        this.context.moveTo(packetIP.destinationX, packetIP.destinationY + 20);
-        if (!packetIP.returned) { // If packet hasn't returned to the bouncer, bind it to the packet
+        this.context.fillText(packetIP.sourceIP, packetIP.sourceX, packetIP.sourceY, AppConstants.BOUNCER_WIDTH);
+        this.context.arc(packetIP.sourceX, packetIP.sourceY - 30, 5, 0, Math.PI * 2);
+        this.context.moveTo(packetIP.sourceX, packetIP.sourceY - 30);
+        if (!packetIP.hasDestination) { // If packet has no destination, bind it to the packet
           this.context.lineTo(this.x, this.y);
-        } else { // Otherwise, finish the line
-          this.context.lineTo(packetIP.returnX, packetIP.returnY - 20);
+        } else { // However if the packet has a destination, bind it to destination coordinates
+          this.context.lineTo(packetIP.destinationX, packetIP.destinationY + 20);
         }
         this.context.stroke();
         this.context.closePath();
 
-        if (packetIP.returned) {
+        // Destination IP
+        if (packetIP.hasDestination) {
           this.context.beginPath();
-          this.context.arc(packetIP.returnX, packetIP.returnY - 20, 5, 0, Math.PI * 2);
+          this.context.lineWidth = 2;
+          this.context.fillText(packetIP.destinationIP, packetIP.destinationX, packetIP.destinationY, AppConstants.BOUNCER_WIDTH);
+          this.context.arc(packetIP.destinationX, packetIP.destinationY + 20, 5, 0, Math.PI * 2);
+          this.context.moveTo(packetIP.destinationX, packetIP.destinationY + 20);
+          if (!packetIP.returned) { // If packet hasn't returned to the bouncer, bind it to the packet
+            this.context.lineTo(this.x, this.y);
+          } else { // Otherwise, finish the line
+            this.context.lineTo(packetIP.returnX, packetIP.returnY - 20);
+          }
           this.context.stroke();
           this.context.closePath();
-          packetIP.uiAlpha -= 0.05;
-          if (packetIP.uiAlpha <= 0) {
-            this.bounces.splice(i, 1);
+
+          if (packetIP.returned) {
+            this.context.beginPath();
+            this.context.arc(packetIP.returnX, packetIP.returnY - 20, 5, 0, Math.PI * 2);
+            this.context.stroke();
+            this.context.closePath();
+            packetIP.uiAlpha -= 0.05;
+            if (packetIP.uiAlpha <= 0) {
+              this.bounces.splice(i, 1);
+            }
           }
         }
-      }
 
+      }
     }
 
     this.context.beginPath();
@@ -119,16 +125,73 @@ export class Packet extends Drawable {
     this.context.closePath();
   }
 
-  managePacketIP(wall) {
+  managePacketIP(lost?) {
     if (this.bounces.length === 1) {
       const bounce = this.bounces[0];
       if (!bounce.hasDestination) {
-        bounce.destinationIP = '8.8.8.8';
+        if (lost) {
+          bounce.destinationIP = 'Packet redirected';
+        } else {
+          const range1 = Math.ceil(Math.random() * 255);
+          const range2 = Math.floor(Math.random() * 255);
+          const range3 = Math.floor(Math.random() * 255);
+          const range4 = Math.floor(Math.random() * 255);
+          bounce.destinationIP = range1 + '.' + range2 + '.' + range3 + '.' + range4;
+        }
         bounce.destinationX = this.x;
-        bounce.destinationY = AppConstants.WALLS_Y * (AppConstants.WALLS_HEIGHT + AppConstants.SPACING) + 30;
+        bounce.destinationY = this.y + (lost ? 10 : 0); // AppConstants.WALLS_Y * (AppConstants.WALLS_HEIGHT + AppConstants.SPACING) + 30;
         bounce.hasDestination = true;
       }
     }
+  }
+
+  manageWallHit(wall) {
+    wall.active = false;
+    this.managePacketIP();
+
+    if (this.checkForWalls()) {
+      AppStates.STARTED = false;
+      AppStates.STAGE++;
+      Packet.health++;
+      AppStates.WALLS_X += 2;
+      AppStates.WALLS_WIDTH = AppConstants.GAME_WIDTH / AppStates.WALLS_X;
+      AppStates.CHANGING_STAGE = true;
+      this.reset(true);
+    }
+  }
+
+  checkForWalls() {
+    for (let x = 0; x < AppStates.WALLS_X; x++) {
+      for (let y = 0; y < AppStates.WALLS_Y; y++) {
+        if (Firewall.list[x][y].active) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  reset(hardReset?) {
+    if (hardReset) {
+      Firewall.list = [];
+      for (let x = 0; x < AppStates.WALLS_X; x++) {
+        Firewall.list[x] = [];
+        for (let y = 0; y < AppStates.WALLS_Y; y++) {
+          Firewall.list[x][y] = new Wall(
+            x * AppStates.WALLS_WIDTH + AppConstants.SPACING,
+            y * AppStates.WALLS_HEIGHT + AppConstants.SPACING,
+            AppStates.WALLS_WIDTH - AppConstants.SPACING * 2,
+            AppStates.WALLS_HEIGHT - AppConstants.SPACING * 2
+          );
+        }
+      }
+    }
+    this.bounces = [];
+    this.bouncer.x = (AppConstants.GAME_WIDTH - AppConstants.BOUNCER_WIDTH) / 2;
+    this.bouncer.y = AppConstants.GAME_HEIGHT - AppConstants.BOUNCER_HEIGHT - 10;
+    this.x = this.bouncer.x + AppConstants.BOUNCER_WIDTH / 2;
+    this.y = this.bouncer.y - AppConstants.PACKET_RADIUS - 5;
+    this.bounces.push(new PacketIP(this.bouncer.x + AppConstants.BOUNCER_WIDTH / 2, this.bouncer.y - 5));
   }
 
   bounceOnIntersection(wall) {
@@ -159,8 +222,7 @@ export class Packet extends Drawable {
         const normalY = packetDistanceY * sideY < 0 ? -1 : 1;
         this.velocityY = normalY;
       }
-      wall.active = false;
-      this.managePacketIP(wall);
+      this.manageWallHit(wall);
       return; // Yes, bounced!
     }
 
@@ -176,12 +238,11 @@ export class Packet extends Drawable {
           vectorY = packetDistanceY < 0 ? -1 : 1;
     this.velocityX = vectorX * sideX / normalize;
     this.velocityY = vectorY * sideY / normalize;
-    wall.active = false;
-    this.managePacketIP(wall);
+    this.manageWallHit(wall);
     return; // Yes, bounced!
   }
 
-  bounceOnBoundsIntersection(bouncer: Bouncer) {
+  bounceOnBoundsIntersection() {
     if (this.x > AppConstants.GAME_WIDTH - AppConstants.PACKET_RADIUS) {
       this.velocityX = -this.velocityX;
       this.hitRight = true;
@@ -193,32 +254,39 @@ export class Packet extends Drawable {
       this.velocityX = Math.random() * (Math.floor(Math.random() * 2) === 1 ? 1 : -1);
       this.velocityY = -this.velocityY;
 
+      for (let i = 0; i < this.bounces.length; i++) {
+        const packetIP = this.bounces[i];
+        packetIP.returned = true;
+      }
+
+      this.bounces.push(new PacketIP(this.bouncer.x + AppConstants.BOUNCER_WIDTH / 2, this.bouncer.y - 5));
+
       // Packet lost
-      if (--Packet.health < 0) {
+      if (--Packet.health <= 0) {
         // Reset game
-        for (let x = 0; x < AppConstants.WALLS_X; x++) {
-          for (let y = 0; y < AppConstants.WALLS_Y; y++) {
-            const wall = Firewall.list[x][y];
-            wall.active = true;
-          }
-        }
-        bouncer.x = (AppConstants.GAME_WIDTH - AppConstants.BOUNCER_WIDTH) / 2;
-        bouncer.y = AppConstants.GAME_HEIGHT - AppConstants.BOUNCER_HEIGHT - 10;
+        AppStates.STARTED = false;
+        AppStates.STAGE = 1;
+        AppStates.WALLS_X = 3;
+        AppStates.WALLS_WIDTH = AppConstants.GAME_WIDTH / AppStates.WALLS_X;
+        AppStates.CHANGING_STAGE = true;
+        this.reset(true);
         Packet.health = 3;
       }
-      this.x = bouncer.x + AppConstants.BOUNCER_WIDTH / 2;
-      this.y = bouncer.y - AppConstants.PACKET_RADIUS - 5;
+      this.reset();
     }
 
     if (this.x < AppConstants.PACKET_RADIUS) {
       this.velocityX = -this.velocityX;
       this.hitLeft = true;
-      // Same
+      // Bug check
       this.x = AppConstants.PACKET_RADIUS;
     }
 
     if (this.y < AppConstants.PACKET_RADIUS) {
       this.velocityY = -this.velocityY;
+      this.managePacketIP(true);
+      // Bug check
+      this.y = AppConstants.PACKET_RADIUS;
     }
 
     if (this.hitRight) {
