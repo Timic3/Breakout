@@ -1,4 +1,5 @@
 import { LeaderboardComponent } from '../leaderboard/leaderboard.component';
+import { MatDialog } from '@angular/material';
 
 import { AppConstants } from '../app.constants';
 import { AppStates } from '../app.states';
@@ -284,6 +285,7 @@ export class Packet extends Drawable {
         // Reset game
         AppStates.STARTED = false;
         LeaderboardComponent.saveScore(AppStates.STAGE);
+        AppStates.ENDED = true;
         AppStates.STAGE = 1;
         AppStates.WALLS_X = 3;
         AppStates.WALLS_WIDTH = AppConstants.GAME_WIDTH / AppStates.WALLS_X;

@@ -3,6 +3,7 @@ import { MatDialog } from '@angular/material';
 
 import { HelloComponent } from './hello/hello.component';
 import { LeaderboardComponent } from './leaderboard/leaderboard.component';
+import { EndComponent } from './end/end.component';
 
 import { AppConstants } from './app.constants';
 import { AppStates } from './app.states';
@@ -110,6 +111,12 @@ export class AppComponent implements AfterContentInit {
         }
       }
 
+      // BAD AGAIN
+      if (AppStates.ENDED) {
+        AppStates.ENDED = false;
+        this.openEnd();
+      }
+
       if (this.levelUp) {
         this.levelUpSize += 0.03;
         if (this.levelUpSize >= 1) {
@@ -204,6 +211,12 @@ export class AppComponent implements AfterContentInit {
 
   openLeaderboard() {
     const dialog = this.dialog.open(LeaderboardComponent, {
+      width: '500px'
+    });
+  }
+
+  openEnd() {
+    const dialog = this.dialog.open(EndComponent, {
       width: '500px'
     });
   }

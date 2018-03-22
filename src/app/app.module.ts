@@ -12,13 +12,15 @@ import {
 import { AppComponent } from './app.component';
 import { HelloComponent } from './hello/hello.component';
 import { LeaderboardComponent } from './leaderboard/leaderboard.component';
+import { EndComponent } from './end/end.component';
 
 
 @NgModule({
   declarations: [
     AppComponent,
     HelloComponent,
-    LeaderboardComponent
+    LeaderboardComponent,
+    EndComponent
   ],
   imports: [
     BrowserModule,
@@ -30,6 +32,6 @@ import { LeaderboardComponent } from './leaderboard/leaderboard.component';
   ],
   providers: [],
   bootstrap: [AppComponent],
-  entryComponents: [HelloComponent, LeaderboardComponent]
+  entryComponents: [HelloComponent, LeaderboardComponent, EndComponent]
 })
 export class AppModule { }

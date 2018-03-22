@@ -2,6 +2,7 @@ import { AppConstants } from './app.constants';
 
 export class AppStates {
   public static STARTED = false;
+  public static ENDED = false;
   public static STAGE = 1;
   public static CHANGING_STAGE = false;
 
