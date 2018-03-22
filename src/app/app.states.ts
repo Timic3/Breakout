@@ -13,4 +13,6 @@ export class AppStates {
 
   public static WALLS_WIDTH = AppConstants.GAME_WIDTH / AppStates.WALLS_X;
   static readonly WALLS_HEIGHT = 40;
+
+  public static NAME = 'guest';
 }

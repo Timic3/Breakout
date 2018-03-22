@@ -1,4 +1,8 @@
 import { Component, AfterContentInit, HostListener } from '@angular/core';
+import { MatDialog } from '@angular/material';
+
+import { HelloComponent } from './hello/hello.component';
+import { LeaderboardComponent } from './leaderboard/leaderboard.component';
 
 import { AppConstants } from './app.constants';
 import { AppStates } from './app.states';
@@ -41,6 +45,9 @@ export class AppComponent implements AfterContentInit {
   public levelUpSize = 0;
 
   public heart;
+  public helloScreen = true;
+
+  constructor(public dialog: MatDialog) { }
 
   ngAfterContentInit() {
     this.game = <HTMLCanvasElement>document.getElementById('breakout');
@@ -57,6 +64,9 @@ export class AppComponent implements AfterContentInit {
           packetY = this.bouncer.y - AppConstants.PACKET_RADIUS - 5;
     this.packet = new Packet(packetX, packetY, this.bouncer, this.context);
     this.then = Date.now();
+
+    this.initiateHelloScreen();
+
     this.gameLoop();
   }
 
@@ -67,17 +77,6 @@ export class AppComponent implements AfterContentInit {
     this.elapsed = this.now - this.then;
     if (this.elapsed > 1000 / this.gameFPS) {
       this.then = this.now - (this.elapsed % (1000 / this.gameFPS));
-
-      this.context.clearRect(0, 0, AppConstants.GAME_WIDTH, AppConstants.GAME_HEIGHT + 40);
-      this.context.fillStyle = 'rgba(16, 16, 16, 0.5)';
-      this.context.fillRect(0, 0, AppConstants.GAME_WIDTH, AppConstants.GAME_HEIGHT + 40);
-
-      this.cameraShake();
-
-      this.context.font = '85px Arial';
-      this.context.textAlign = 'center';
-      this.context.fillStyle = 'rgba(111, 111, 111, 1.0)';
-      this.context.fillText(String(AppStates.STAGE), AppConstants.HALF_WIDTH, AppConstants.HALF_HEIGHT, AppConstants.GAME_WIDTH);
 
       if (this.gameStarting) {
         this.levelUpSize -= 0.03;
@@ -119,7 +118,18 @@ export class AppComponent implements AfterContentInit {
         }
       }
 
-      this.context.font = (Easing.easeInOutCubic(this.levelUpSize) * 50) + 'px Arial';
+      this.context.clearRect(0, 0, AppConstants.GAME_WIDTH, AppConstants.GAME_HEIGHT + 40);
+      this.context.fillStyle = 'rgba(16, 16, 16, 0.5)';
+      this.context.fillRect(0, 0, AppConstants.GAME_WIDTH, AppConstants.GAME_HEIGHT + 40);
+
+      // this.cameraShake();
+
+      this.context.font = '85px Ubuntu';
+      this.context.textAlign = 'center';
+      this.context.fillStyle = 'rgba(111, 111, 111, 1.0)';
+      this.context.fillText(String(AppStates.STAGE), AppConstants.HALF_WIDTH, AppConstants.HALF_HEIGHT, AppConstants.GAME_WIDTH);
+
+      this.context.font = (Easing.easeInOutCubic(this.levelUpSize) * 50) + 'px Ubuntu';
       this.context.fillStyle = 'rgba(255, 255, 255, ' + this.levelUpSize + ')';
       this.context.fillText('Level up!', AppConstants.HALF_WIDTH, AppConstants.HALF_HEIGHT - 130, AppConstants.GAME_WIDTH);
 
@@ -127,11 +137,13 @@ export class AppComponent implements AfterContentInit {
       this.context.strokeStyle = 'rgba(111, 111, 111, ' + (1 - this.circleExpand) + ')';
       this.context.lineWidth = 15;
       const radius = 70 + 20 * this.circleExpand;
-      this.context.arc(AppConstants.HALF_WIDTH, AppConstants.HALF_HEIGHT - 30, radius, 0, Math.PI * this.circleAnimation);
+      const startAngle = -Math.PI / 2;
+      const endAngle = startAngle + (Math.PI) * this.circleAnimation;
+      this.context.arc(AppConstants.HALF_WIDTH, AppConstants.HALF_HEIGHT - 30, radius, startAngle, endAngle);
       this.context.stroke();
       this.context.closePath();
 
-      this.context.font = '25px Arial';
+      this.context.font = '25px Ubuntu';
       this.context.fillStyle = 'rgba(255, 255, 255, 1.0)';
       if (!this.gameStarting && !AppStates.STARTED) {
         this.context.fillText('Press SPACE to begin', AppConstants.HALF_WIDTH, AppConstants.HALF_HEIGHT + 100, AppConstants.GAME_WIDTH);
@@ -157,9 +169,9 @@ export class AppComponent implements AfterContentInit {
       this.context.stroke();
       this.context.closePath();*/
 
-      if (this.shakeTickStart !== -1) {
+      /*if (this.shakeTickStart !== -1) {
         this.restoreCamera();
-      }
+      }*/
     }
   }
 
@@ -168,9 +180,32 @@ export class AppComponent implements AfterContentInit {
   onKeyEvent(event: KeyboardEvent) {
     this.bouncer.onKeyChange(event, event.type === 'keydown' ? true : false);
 
-    if (event.keyCode === 32) {
+    if (event.keyCode === 32 && !this.helloScreen) {
+      // Prevent from firing focused Material element
+      event.preventDefault();
       this.gameStarting = true;
     }
+  }
+
+  initiateHelloScreen() {
+    setTimeout(() => {
+      const dialog = this.dialog.open(HelloComponent, {
+        width: '500px',
+        disableClose: true
+      });
+
+      dialog.afterClosed()
+        .subscribe((nameInput) => {
+          AppStates.NAME = nameInput;
+          this.helloScreen = false;
+        });
+    });
+  }
+
+  openLeaderboard() {
+    const dialog = this.dialog.open(LeaderboardComponent, {
+      width: '500px'
+    });
   }
 
   cameraShake() {

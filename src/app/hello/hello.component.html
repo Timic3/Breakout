@@ -1,0 +1,33 @@
+<h1 mat-dialog-title>👨‍💻 Welcome to Hacker Breakout!</h1>
+
+<mat-dialog-content>
+  <p>
+    You are trapped in a world, where cyber technology is heavily advanced. Everything is controlled by an A.I.
+    It won't let you leave, so all you can do is compete with others.
+  </p>
+  <p>
+    Everytime you break all walls, you open a door to a new level with higher security and bigger firewall,
+    therefore you will need higher network speeds. The packet will move faster based on the level you are in.
+    You only have 3 lives, but you gain a life after levelling up.
+  </p>
+  <p>
+    Move the bouncer (paddle) with ⬅️ and ➡️ keys on your keyboard. You can check leaderboards by clicking
+    on the ⭐ button on the far left.
+  </p>
+  <p>
+    One more thing: I will need your name.
+  </p>
+  <mat-form-field>
+    <input matInput #nameInput name="nameInput" placeholder="Name">
+    <mat-hint *ngIf="nameError" [ngStyle]="{'color': 'red'}">This field is <strong>required</strong></mat-hint>
+  </mat-form-field>
+  <p>
+    - Timotej M.
+  </p>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button (click)="confirm(nameInput)" color="primary" mat-raised-button>
+    Play
+  </button>
+</mat-dialog-actions>

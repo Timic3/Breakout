@@ -1,3 +1,5 @@
+import { LeaderboardComponent } from '../leaderboard/leaderboard.component';
+
 import { AppConstants } from '../app.constants';
 import { AppStates } from '../app.states';
 import { Drawable } from './Drawable';
@@ -12,6 +14,10 @@ export class Packet extends Drawable {
 
   private velocityX = Math.random() * (Math.floor(Math.random() * 2) === 1 ? 1 : -1);
   private velocityY = -1;
+
+  private angle = Math.atan2(this.velocityY, this.velocityX);
+  private angleX = Math.cos(this.angle);
+  private angleY = Math.sin(this.angle);
 
   private hitRight = false;
   private hitLeft = false;
@@ -31,9 +37,8 @@ export class Packet extends Drawable {
     // Trigonometry - calculate direction in radians and multiply with speed
     // This allows us to keep constant ball speed
     if (AppStates.STARTED) {
-      const angle = Math.atan2(this.velocityY, this.velocityX);
-      this.x += Math.cos(angle) * (AppStates.PACKET_SPEED + AppConstants.PROGRESSIVENESS * (AppStates.STAGE - 1));
-      this.y += Math.sin(angle) * (AppStates.PACKET_SPEED + AppConstants.PROGRESSIVENESS * (AppStates.STAGE - 1));
+      this.x += this.angleX * (AppStates.PACKET_SPEED + AppConstants.PROGRESSIVENESS * (AppStates.STAGE - 1));
+      this.y += this.angleY * (AppStates.PACKET_SPEED + AppConstants.PROGRESSIVENESS * (AppStates.STAGE - 1));
     }
 
     for (let x = 0; x < AppStates.WALLS_X; x++) {
@@ -55,6 +60,7 @@ export class Packet extends Drawable {
           // Just a safety check
           this.y = this.bouncer.y - AppConstants.PACKET_RADIUS;
           this.velocityX = (this.x - this.bouncer.x - AppConstants.BOUNCER_WIDTH / 2) / 100;
+          this.updateAngle();
           if (this.bounces[0]) {
             this.bounces[0].returnX = this.x;
             this.bounces[0].returnY = this.y;
@@ -70,7 +76,7 @@ export class Packet extends Drawable {
         this.context.shadowColor = 'black';
         this.context.shadowOffsetX = 1;
         this.context.shadowOffsetY = 1;
-        this.context.font = '15px Arial';
+        this.context.font = '15px Ubuntu';
         this.context.textAlign = 'center';
         this.context.strokeStyle = 'rgba(255, 255, 255, ' + packetIP.uiAlpha + ')';
 
@@ -123,6 +129,12 @@ export class Packet extends Drawable {
     this.context.arc(this.x, this.y, AppConstants.PACKET_RADIUS, 0, Math.PI * 2);
     this.context.fill();
     this.context.closePath();
+  }
+
+  updateAngle() {
+    this.angle = Math.atan2(this.velocityY, this.velocityX);
+    this.angleX = Math.cos(this.angle);
+    this.angleY = Math.sin(this.angle);
   }
 
   managePacketIP(lost?) {
@@ -191,7 +203,9 @@ export class Packet extends Drawable {
     this.bouncer.y = AppConstants.GAME_HEIGHT - AppConstants.BOUNCER_HEIGHT - 10;
     this.x = this.bouncer.x + AppConstants.BOUNCER_WIDTH / 2;
     this.y = this.bouncer.y - AppConstants.PACKET_RADIUS - 5;
-    this.bounces.push(new PacketIP(this.bouncer.x + AppConstants.BOUNCER_WIDTH / 2, this.bouncer.y - 5));
+    if (!hardReset) {
+      this.bounces.push(new PacketIP(this.bouncer.x + AppConstants.BOUNCER_WIDTH / 2, this.bouncer.y - 5));
+    }
   }
 
   bounceOnIntersection(wall) {
@@ -222,6 +236,7 @@ export class Packet extends Drawable {
         const normalY = packetDistanceY * sideY < 0 ? -1 : 1;
         this.velocityY = normalY;
       }
+      this.updateAngle();
       this.manageWallHit(wall);
       return; // Yes, bounced!
     }
@@ -238,6 +253,7 @@ export class Packet extends Drawable {
           vectorY = packetDistanceY < 0 ? -1 : 1;
     this.velocityX = vectorX * sideX / normalize;
     this.velocityY = vectorY * sideY / normalize;
+    this.updateAngle();
     this.manageWallHit(wall);
     return; // Yes, bounced!
   }
@@ -245,6 +261,7 @@ export class Packet extends Drawable {
   bounceOnBoundsIntersection() {
     if (this.x > AppConstants.GAME_WIDTH - AppConstants.PACKET_RADIUS) {
       this.velocityX = -this.velocityX;
+      this.updateAngle();
       this.hitRight = true;
       // Don't bug out!
       this.x = AppConstants.GAME_WIDTH - AppConstants.PACKET_RADIUS;
@@ -253,6 +270,7 @@ export class Packet extends Drawable {
     if (this.y >= AppConstants.GAME_HEIGHT - AppConstants.PACKET_RADIUS) {
       this.velocityX = Math.random() * (Math.floor(Math.random() * 2) === 1 ? 1 : -1);
       this.velocityY = -this.velocityY;
+      this.updateAngle();
 
       for (let i = 0; i < this.bounces.length; i++) {
         const packetIP = this.bounces[i];
@@ -265,6 +283,7 @@ export class Packet extends Drawable {
       if (--Packet.health <= 0) {
         // Reset game
         AppStates.STARTED = false;
+        LeaderboardComponent.saveScore(AppStates.STAGE);
         AppStates.STAGE = 1;
         AppStates.WALLS_X = 3;
         AppStates.WALLS_WIDTH = AppConstants.GAME_WIDTH / AppStates.WALLS_X;
@@ -277,6 +296,7 @@ export class Packet extends Drawable {
 
     if (this.x < AppConstants.PACKET_RADIUS) {
       this.velocityX = -this.velocityX;
+      this.updateAngle();
       this.hitLeft = true;
       // Bug check
       this.x = AppConstants.PACKET_RADIUS;
@@ -284,6 +304,7 @@ export class Packet extends Drawable {
 
     if (this.y < AppConstants.PACKET_RADIUS) {
       this.velocityY = -this.velocityY;
+      this.updateAngle();
       this.managePacketIP(true);
       // Bug check
       this.y = AppConstants.PACKET_RADIUS;

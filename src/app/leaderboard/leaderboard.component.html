@@ -1,0 +1,33 @@
+<h1 mat-dialog-title>⭐ Top 5 players</h1>
+
+<mat-dialog-content>
+  <div *ngIf="scores.length > 0; then leaderboard; else noData"></div>
+  <ng-template #noData>
+    <h3>There are no scores yet!</h3>
+  </ng-template>
+  <ng-template #leaderboard>
+    <ul class="leaderboard">
+      <li *ngFor="let score of scores; index as i" [attr.data-index]="i">
+        <h3>
+          <ng-template [ngIf]="i === 0">🥇</ng-template>
+          <ng-template [ngIf]="i === 1">🥈</ng-template>
+          <ng-template [ngIf]="i === 2">🥉</ng-template>
+          <ng-template [ngIf]="i >= 3">🌟</ng-template>
+          <div *ngIf="getLoggedIn() === score.name; then personal; else notPersonal"></div>
+          <ng-template #personal>
+            <span class="personal">{{score.name}}: {{score.score}}</span>
+          </ng-template>
+          <ng-template #notPersonal>
+            <span>{{score.name}}: {{score.score}}</span>
+          </ng-template>
+        </h3>
+      </li>
+    </ul>
+  </ng-template>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button (click)="dialogRef.close()" color="primary" mat-raised-button>
+    Close
+  </button>
+</mat-dialog-actions>

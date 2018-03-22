@@ -1,10 +1,27 @@
 body {
     overflow: hidden;
+    font-family: 'Ubuntu', sans-serif;
     background: url('assets/images/circuit.jpg') no-repeat center center fixed;
     -webkit-background-size: cover;
     -moz-background-size: cover;
     -o-background-size: cover;
     background-size: cover;
+}
+
+.settings {
+    position: absolute;
+    z-index: 900;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+ul.leaderboard {
+    list-style-type: none;
+    padding-left: 10px;
+}
+
+.personal {
+    color: rgb(31, 201, 200);
 }
 
 #breakout {
@@ -14,4 +31,8 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
+}
+
+mat-form-field {
+    width: 100%;
 }
