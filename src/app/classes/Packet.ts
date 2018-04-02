@@ -30,7 +30,6 @@ export class Packet extends Drawable {
 
   private wallAudio;
   private pointAudio;
-  private paddleAudio;
 
   constructor(x: number, y: number, bouncer: Bouncer, context: CanvasRenderingContext2D) {
     super(x, y, context);
@@ -40,10 +39,6 @@ export class Packet extends Drawable {
     this.wallAudio = new Audio();
     this.wallAudio.src = './assets/sounds/wall.wav';
     this.wallAudio.load();
-
-    this.paddleAudio = new Audio();
-    this.paddleAudio.src = './assets/sounds/paddle.wav';
-    this.paddleAudio.load();
 
     this.pointAudio = new Audio();
     this.pointAudio.src = './assets/sounds/point.wav';
