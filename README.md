@@ -1,27 +1,24 @@
-# Breakout
+# Hacker Breakout
+Hacking themed Breakout game for school built using Angular framework. Written in Typescript, SCSS and HTML5.
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 1.6.6.
+## Backstory
+You are trapped in a world, where cyber technology is heavily advanced. Everything is controlled by an A.I.
+It won't let you leave, so all you can do is compete with others.
 
-## Development server
+Everytime you break all walls, you open a door to a new level with higher security and bigger firewall,
+therefore you will need higher network speeds. The packet will move faster based on the level you are in.
+You only have 3 lives, but you gain a life after levelling up.
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+Move the bouncer (paddle) with ⬅️ and ➡️ keys on your keyboard. You can check leaderboards by clicking
+on the ⭐ button on the far left. Score is based on how many firewalls you destroy.
 
-## Code scaffolding
+## Download
+You can download compiled project [here](https://github.com/Timic3/Breakout/releases/latest) or even better, view it in action [here](https://timic3.github.io/Breakout/)
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
-
-## Build
-
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `-prod` flag for a production build.
-
-## Running unit tests
-
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## Running end-to-end tests
-
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+## Compiling
+* Install Node.js (includes npm too)
+* Install Angular CLI with ```npm install -g @angular/cli@latest```
+* Download the [latest source](https://github.com/Timic3/Breakout/archive/master.zip) of Galaxy Maze and unzip it
+* Move into the same directory with command prompt and run ```npm install``` to install dependencies
+* Run ```ng serve``` and open ```localhost:4200``` once it builds
+* You can also build it with ```ng build``` for development build or ```ng build --prod``` for production build

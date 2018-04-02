@@ -12,7 +12,7 @@
   </p>
   <p>
     Move the bouncer (paddle) with ⬅️ and ➡️ keys on your keyboard. You can check leaderboards by clicking
-    on the ⭐ button on the far left.
+    on the ⭐ button on the far left. Score is based on how many firewalls you destroy.
   </p>
   <p>
     One more thing: I will need your name.
@@ -21,9 +21,6 @@
     <input matInput #nameInput name="nameInput" placeholder="Name">
     <mat-hint *ngIf="nameError" [ngStyle]="{'color': 'red'}">This field is <strong>required</strong></mat-hint>
   </mat-form-field>
-  <p>
-    - Timotej M.
-  </p>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">

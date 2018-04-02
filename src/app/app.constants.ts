@@ -1,4 +1,7 @@
 export class AppConstants {
+  // Application version
+  static readonly APP_VERSION = '1.0.0';
+
   static readonly GAME_WIDTH = 1200;
   static readonly GAME_HEIGHT = 700;
 

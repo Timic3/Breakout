@@ -22,3 +22,20 @@ export class Easing {
     return Math.sin(13 * (Math.PI / 2) * t) * Math.pow(2, 10 * (t - 1));
   }
 }
+
+// Semantic versioning compare method
+export class Version {
+  public static compare(a, b) {
+    const aVer = a.split('.');
+    const bVer = b.split('.');
+    for (let i = 0; i < 3; i++) {
+      if (Number(aVer[i]) > Number(bVer[i])) {
+        return 1;
+      }
+      if (Number(aVer[i]) < Number(bVer[i])) {
+        return -1;
+      }
+    }
+    return 0;
+  }
+}

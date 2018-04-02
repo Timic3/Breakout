@@ -28,10 +28,26 @@ export class Packet extends Drawable {
   private bounces: PacketIP[] = [];
   private bouncer; // Collider
 
+  private wallAudio;
+  private pointAudio;
+  private paddleAudio;
+
   constructor(x: number, y: number, bouncer: Bouncer, context: CanvasRenderingContext2D) {
     super(x, y, context);
     this.bouncer = bouncer;
     this.bounces.push(new PacketIP(bouncer.x + AppConstants.BOUNCER_WIDTH / 2, bouncer.y - 5));
+
+    this.wallAudio = new Audio();
+    this.wallAudio.src = './assets/sounds/wall.wav';
+    this.wallAudio.load();
+
+    this.paddleAudio = new Audio();
+    this.paddleAudio.src = './assets/sounds/paddle.wav';
+    this.paddleAudio.load();
+
+    this.pointAudio = new Audio();
+    this.pointAudio.src = './assets/sounds/point.wav';
+    this.pointAudio.load();
   }
 
   draw() {
@@ -62,6 +78,7 @@ export class Packet extends Drawable {
           this.y = this.bouncer.y - AppConstants.PACKET_RADIUS;
           this.velocityX = (this.x - this.bouncer.x - AppConstants.BOUNCER_WIDTH / 2) / 100;
           this.updateAngle();
+          this.wallAudio.cloneNode(true).play();
           if (this.bounces[0]) {
             this.bounces[0].returnX = this.x;
             this.bounces[0].returnY = this.y;
@@ -160,6 +177,8 @@ export class Packet extends Drawable {
 
   manageWallHit(wall) {
     wall.active = false;
+    AppStates.SCORE += 10;
+    this.pointAudio.cloneNode(true).play();
     this.managePacketIP();
 
     if (this.checkForWalls()) {
@@ -266,6 +285,7 @@ export class Packet extends Drawable {
       this.hitRight = true;
       // Don't bug out!
       this.x = AppConstants.GAME_WIDTH - AppConstants.PACKET_RADIUS;
+      this.wallAudio.cloneNode(true).play();
     }
 
     if (this.y >= AppConstants.GAME_HEIGHT - AppConstants.PACKET_RADIUS) {
@@ -284,7 +304,7 @@ export class Packet extends Drawable {
       if (--Packet.health <= 0) {
         // Reset game
         AppStates.STARTED = false;
-        LeaderboardComponent.saveScore(AppStates.STAGE);
+        LeaderboardComponent.saveScore(AppStates.SCORE);
         AppStates.ENDED = true;
         AppStates.STAGE = 1;
         AppStates.WALLS_X = 3;
@@ -302,6 +322,7 @@ export class Packet extends Drawable {
       this.hitLeft = true;
       // Bug check
       this.x = AppConstants.PACKET_RADIUS;
+      this.wallAudio.cloneNode(true).play();
     }
 
     if (this.y < AppConstants.PACKET_RADIUS) {
@@ -310,6 +331,7 @@ export class Packet extends Drawable {
       this.managePacketIP(true);
       // Bug check
       this.y = AppConstants.PACKET_RADIUS;
+      this.wallAudio.cloneNode(true).play();
     }
 
     if (this.hitRight) {

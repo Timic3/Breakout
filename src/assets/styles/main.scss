@@ -13,6 +13,8 @@ body {
     z-index: 900;
     top: 50%;
     transform: translateY(-50%);
+    display: grid;
+    grid-row-gap: 5px;
 }
 
 ul.leaderboard {
@@ -35,4 +37,14 @@ ul.leaderboard {
 
 mat-form-field {
     width: 100%;
+}
+
+a {
+    outline: none;
+    text-decoration: none;
+    color: rgb(31, 201, 200);
+}
+
+.outdated {
+    color: red;
 }

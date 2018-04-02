@@ -1,16 +1,18 @@
 import { Component, AfterContentInit, HostListener } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { MatDialog } from '@angular/material';
 
 import { HelloComponent } from './hello/hello.component';
 import { LeaderboardComponent } from './leaderboard/leaderboard.component';
 import { EndComponent } from './end/end.component';
+import { InfoComponent } from './info/info.component';
 
 import { AppConstants } from './app.constants';
 import { AppStates } from './app.states';
 import { Packet } from './classes/Packet';
 import { Firewall } from './classes/Firewall';
 import { Bouncer } from './classes/Bouncer';
-import { Easing } from './classes/Utils';
+import { Easing, Version } from './classes/Utils';
 
 @Component({
   selector: 'app-root',
@@ -18,6 +20,9 @@ import { Easing } from './classes/Utils';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements AfterContentInit {
+  public static LATEST_VERSION = 'Server error';
+  public static OUTDATED = false;
+
   public game: HTMLCanvasElement;
   public context: CanvasRenderingContext2D;
 
@@ -48,7 +53,7 @@ export class AppComponent implements AfterContentInit {
   public heart;
   public helloScreen = true;
 
-  constructor(public dialog: MatDialog) { }
+  constructor(public dialog: MatDialog, private http: HttpClient) { }
 
   ngAfterContentInit() {
     this.game = <HTMLCanvasElement>document.getElementById('breakout');
@@ -66,6 +71,7 @@ export class AppComponent implements AfterContentInit {
     this.packet = new Packet(packetX, packetY, this.bouncer, this.context);
     this.then = Date.now();
 
+    this.fetchVersion();
     this.initiateHelloScreen();
 
     this.gameLoop();
@@ -114,7 +120,8 @@ export class AppComponent implements AfterContentInit {
       // BAD AGAIN
       if (AppStates.ENDED) {
         AppStates.ENDED = false;
-        this.openEnd();
+        this.openEnd(AppStates.SCORE);
+        AppStates.SCORE = 0;
       }
 
       if (this.levelUp) {
@@ -161,7 +168,11 @@ export class AppComponent implements AfterContentInit {
       this.packet.draw();
 
       // UI
-      // TODO
+
+      this.context.font = '25px Ubuntu';
+      this.context.textAlign = 'left';
+      this.context.fillStyle = 'rgba(255, 255, 255, 1.0)';
+      this.context.fillText('Score: ' + AppStates.SCORE, 5, AppConstants.GAME_HEIGHT + 32, AppConstants.GAME_WIDTH);
 
       for (let i = 0; i < Packet.health; i++) {
         this.context.drawImage(this.heart, (AppConstants.GAME_WIDTH - 40) - 40 * i, AppConstants.GAME_HEIGHT, 32, 32);
@@ -194,6 +205,27 @@ export class AppComponent implements AfterContentInit {
     }
   }
 
+  fetchVersion() {
+    this.http.get('https://api.github.com/repos/Timic3/Breakout/releases/latest')
+      .subscribe(
+        (data: any) => {
+          AppStates.LATEST_VERSION = data.tag_name;
+          console.log('Current version: ' + AppConstants.APP_VERSION);
+          console.log('Latest GitHub version: ' + data.tag_name);
+          const compareVersions = Version.compare(AppConstants.APP_VERSION, data.tag_name);
+          console.log('Semantic version comparator: ' + compareVersions);
+          if (compareVersions < 0) {
+            console.log('You are using outdated version! Update here: https://github.com/Timic3/Breakout/releases/latest');
+            AppStates.OUTDATED = true;
+          }
+        },
+        (error: HttpErrorResponse) => {
+          console.log('An error occurred while fetching version.');
+          console.log('Error: ' + error.status + ' (' + error.statusText + ')');
+          console.log('Report to: https://github.com/Timic3/Maze/issues');
+        });
+  }
+
   initiateHelloScreen() {
     setTimeout(() => {
       const dialog = this.dialog.open(HelloComponent, {
@@ -215,37 +247,18 @@ export class AppComponent implements AfterContentInit {
     });
   }
 
-  openEnd() {
+  openEnd(endScore) {
     const dialog = this.dialog.open(EndComponent, {
-      width: '500px'
+      width: '500px',
+      data: {
+        score: endScore
+      }
     });
   }
 
-  cameraShake() {
-    if (this.shakeTickStart === -1) {
-      return;
-    }
-
-    const tick = Date.now() - this.shakeTickStart;
-    if (tick > this.shakeTime) {
-      this.shakeTickStart = -1;
-      return;
-    }
-
-    const easing = Math.pow(tick / this.shakeTime - 1, 3) + 1;
-    this.context.save();
-    const shakeX = easing * (Math.cos(tick * 0.1) + Math.cos(tick * 0.3115)) * 2;
-    const shakeY = easing * (Math.sin(tick * 0.05) + Math.sin(tick * 0.057113)) * 2;
-    this.context.translate(shakeX, shakeY);
-  }
-
-  // To be finished
-  virusPreShake() {
-    this.context.save();
-    this.context.translate(Math.random() * 20, Math.random() * 20);
-  }
-
-  restoreCamera() {
-    this.context.restore();
+  openInfo() {
+    const dialog = this.dialog.open(InfoComponent, {
+      width: '500px'
+    });
   }
 }

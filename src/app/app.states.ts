@@ -16,4 +16,8 @@ export class AppStates {
   static readonly WALLS_HEIGHT = 40;
 
   public static NAME = 'guest';
+  public static SCORE = 0;
+
+  public static LATEST_VERSION = 'Server error';
+  public static OUTDATED = false;
 }

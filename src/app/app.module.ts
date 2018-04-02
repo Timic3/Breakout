@@ -1,6 +1,7 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgModule } from '@angular/core';
+import { HttpClientModule } from '@angular/common/http';
 
 import {
   MatButtonModule,
@@ -13,6 +14,7 @@ import { AppComponent } from './app.component';
 import { HelloComponent } from './hello/hello.component';
 import { LeaderboardComponent } from './leaderboard/leaderboard.component';
 import { EndComponent } from './end/end.component';
+import { InfoComponent } from './info/info.component';
 
 
 @NgModule({
@@ -20,11 +22,13 @@ import { EndComponent } from './end/end.component';
     AppComponent,
     HelloComponent,
     LeaderboardComponent,
-    EndComponent
+    EndComponent,
+    InfoComponent
   ],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
+    HttpClientModule,
     MatButtonModule,
     MatDialogModule,
     MatIconModule,
@@ -32,6 +36,6 @@ import { EndComponent } from './end/end.component';
   ],
   providers: [],
   bootstrap: [AppComponent],
-  entryComponents: [HelloComponent, LeaderboardComponent, EndComponent]
+  entryComponents: [HelloComponent, LeaderboardComponent, EndComponent, InfoComponent]
 })
 export class AppModule { }

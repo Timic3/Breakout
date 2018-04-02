@@ -1,0 +1,26 @@
+<h1 mat-dialog-title>ℹ️ Information</h1>
+
+<mat-dialog-content>
+  <p>
+    Hacker breakout is built using <a href="https://angular.io">Angular</a>, which is TypeScript-based open-source front-end web application led by Angular Team at Google.
+    It uses webpack which can preprocess and minify non-JavaScript files such as TypeScript, SASS and LESS files.
+  </p>
+  <p>
+    In this project, I am using TypeScript, SCSS/SASS and HTML5. Angular was very easy to work with, because it's very easy to set up and is very well documented.
+    I used Visual Studio Code to write code with many plugins, such as Angular 5 Snippets and Auto Import. I also used TSLint for flagging stylistic errors and
+    bugs in the code.
+  </p>
+  <p>
+    Source code is hosted on <a href="https://github.com/Timic3/Breakout">GitHub</a> along with compiling guide.
+  </p>
+  <h4>Current version: {{getCurrentVersion()}}<br>
+  Latest version: {{getLatestVersion()}}</h4>
+  <h4 *ngIf="isOutdated()" class="outdated">Version is outdated! Get new version <a href="https://github.com/Timic3/Breakout/releases/latest">here</a>.</h4>
+  <h4>Made by Timotej M.</h4>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button (click)="dialogRef.close()" color="primary" mat-raised-button>
+    Close
+  </button>
+</mat-dialog-actions>
